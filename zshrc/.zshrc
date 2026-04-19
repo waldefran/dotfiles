@@ -5,8 +5,8 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 autoload bashcompinit && bashcompinit
 autoload -Uz compinit
 compinit
-source <(kubectl completion zsh)
-complete -C '/usr/local/bin/aws_completer' aws
+# source <(kubectl completion zsh)
+# complete -C '/usr/local/bin/aws_completer' aws
 
 bindkey '^L' vi-forward-word
 bindkey '^k' up-line-or-search
@@ -138,4 +138,4 @@ export XDG_CONFIG_HOME="$HOME/.config"
 
 eval "$(zoxide init zsh)"
 eval "$(atuin init zsh)"
-eval "$(direnv hook zsh)"
+# eval "$(direnv hook zsh)"
