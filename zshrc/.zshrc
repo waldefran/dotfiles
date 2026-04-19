@@ -63,7 +63,7 @@ alias v=nvim
 # Nmap
 alias nm="nmap -sC -sV -oN nmap"
 
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${GOPATH}/bin:${HOME}/.cargo/bin:${HOME}/.local/bin
+export PATH=${HOME}/.opencode/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${GOPATH}/bin
 
 alias cl='clear'
 
