@@ -104,12 +104,18 @@ path add ($env.HOME | path join ".local/bin")
 mkdir ~/.cache/starship
 starship init nu | save -f ~/.cache/starship/init.nu
 zoxide init nushell | save -f ~/.zoxide.nu
-mkdir ~/.cache/mise
-^mise activate nu | save -f ~/.cache/mise/init.nu
+
+if (which mise | is-not-empty) {
+    mkdir ~/.cache/mise
+    ^mise activate nu | save -f ~/.cache/mise/init.nu
+}
 
 $env.STARSHIP_CONFIG = ($env.HOME | path join ".config/starship/starship.toml")
-$env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense' # optional
-mkdir ~/.cache/carapace
-carapace _carapace nushell | save --force ~/.cache/carapace/init.nu
+
+if (which carapace | is-not-empty) {
+    $env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
+    mkdir ~/.cache/carapace
+    carapace _carapace nushell | save --force ~/.cache/carapace/init.nu
+}
 
 $env.EDITOR = "nvim"

@@ -904,13 +904,8 @@ alias c = clear
 alias ll = ls -l
 alias lt = eza --tree --level=2 --long --icons --git
 alias v = nvim
-alias as = aerospace
 alias asr = atuin scripts run
-alias oc = opencode 
-
-def ff [] {
-    aerospace list-windows --all | fzf --bind 'enter:execute(bash -c "aerospace focus --window-id {1}")+abort'
-}
+alias oc = opencode
 
 # Git
 alias gc = git commit -m
@@ -944,10 +939,16 @@ alias kl = kubectl logs -f
 alias ke = kubectl exec -it
 
 source ~/.zoxide.nu
-source ~/.cache/carapace/init.nu
 source ~/.local/share/atuin/init.nu
 use ~/.cache/starship/init.nu
-use ~/.cache/mise/init.nu
+
+if (("~/.cache/carapace/init.nu" | path expand | path exists)) {
+    source ~/.cache/carapace/init.nu
+}
+
+if (("~/.cache/mise/init.nu" | path expand | path exists)) {
+    use ~/.cache/mise/init.nu
+}
 
 
 $env.DIRENV_LOG_FORMAT = ""
