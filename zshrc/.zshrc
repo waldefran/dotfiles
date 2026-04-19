@@ -139,3 +139,20 @@ export XDG_CONFIG_HOME="$HOME/.config"
 eval "$(zoxide init zsh)"
 eval "$(atuin init zsh)"
 eval "$(direnv hook zsh)"
+
+# sesh — fuzzy tmux session picker (omerxx style)
+t() {
+  [[ -n "$TMUX" ]] && local change="switch-client" || local change="attach-session"
+  if [[ -n "$1" ]]; then
+    tmux $change -t "$1" 2>/dev/null || (tmux new-session -d -s "$1" && tmux $change -t "$1")
+    return
+  fi
+  local session
+  session=$(sesh list -t -c | fzf \
+    --height 40% --reverse \
+    --border --border-label ' sesh ' \
+    --prompt '⚡  ' \
+    --preview 'sesh preview {}' \
+    --preview-window 'right:55%') \
+    && sesh connect "$session"
+}
