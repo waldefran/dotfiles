@@ -138,4 +138,4 @@ export XDG_CONFIG_HOME="$HOME/.config"
 
 eval "$(zoxide init zsh)"
 eval "$(atuin init zsh)"
-# eval "$(direnv hook zsh)"
+eval "$(direnv hook zsh)"
