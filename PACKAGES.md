@@ -106,7 +106,7 @@ This document describes how the packages in this dotfiles repository relate to e
 export LANG=en_US.UTF-8
 export EDITOR=nvim
 export KUBECONFIG=~/.kube/config
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${GOPATH}/bin:${HOME}/.cargo/bin:${HOME}/.local/bin
+export PATH=${HOME}/.opencode/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${GOPATH}/bin
 export XDG_CONFIG_HOME="$HOME/.config"
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow'
@@ -129,6 +129,7 @@ export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow'
 - `bat` - Cat replacement
 - `fzf` - Fuzzy finder
 - `fd` - Fast file finder (FZF backend)
+- `sesh` - Tmux session manager (required by `t()`)
 - `kubectl` - Kubernetes CLI
 - `ngrok` - Tunneling
 
@@ -142,20 +143,24 @@ export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow'
 
 **Custom Functions:**
 ```bash
-cx() { cd "$@" && l; }        # Change dir + list
+cx() { cd "$@" && l; }               # Change dir + list
 fcd() { cd "$(find ... | fzf)" && l; }  # Fuzzy cd
 f() { echo "$(find ... | fzf)" | xclip; }  # Copy path
-fv() { nvim "$(find ... | fzf)"; }  # Open in vim
+fv() { nvim "$(find ... | fzf)"; }   # Open in vim
+t() { sesh list | fzf | sesh connect }  # Fuzzy tmux session picker (sesh)
 ```
 
 ---
 
 #### 3. Nushell (`nushell/`)
-**Purpose:** Alternative shell with structured data handling
+**Purpose:** Alternative shell with structured data handling — default shell inside tmux
+
+**Version:** 0.112.2 (installed at `~/.local/bin/nu`)
 
 **Files:**
 - `env.nu` - Environment variables, prompts, PATH
-- `config.nu` - Main config, keybindings, aliases (955 lines)
+- `config.nu` - Main config, keybindings, aliases
+- `vendor/autoload/wt.nu` - WezTerm integration (sets `TERM_PROGRAM`, exposes `wezterm-set-user-var`)
 
 **Prompt Definition:**
 - **Left Prompt:** Directory path (green, with `~` abbreviation)
@@ -164,27 +169,30 @@ fv() { nvim "$(find ... | fzf)"; }  # Open in vim
 **PATH Additions:**
 ```nu
 path add "/usr/local/bin"
-path add "$HOME/.turso"
-path add "$HOME/.local/share/mise/shims"
-path add "$HOME/.local/bin"
+path add ($env.HOME | path join ".turso")
+path add ($env.HOME | path join ".local/share/mise/shims")
+path add ($env.HOME | path join ".local/bin")
+path add ($env.HOME | path join ".opencode/bin")
 ```
 
 **Integrations:**
-| Tool | Setup | Cache File |
-|------|-------|------------|
-| Starship | `starship init nu` | `~/.cache/starship/init.nu` |
-| Zoxide | `zoxide init nushell` | `~/.zoxide.nu` |
-| Mise | `mise activate nu` | `~/.cache/mise/init.nu` |
-| Carapace | `carapace _carapace nushell` | `~/.cache/carapace/init.nu` |
-| Atuin | Source init | `~/.local/share/atuin/init.nu` |
-| Direnv | pre_prompt hook | N/A |
+| Tool | Setup | Cache File | Required |
+|------|-------|------------|---------|
+| Starship | `starship init nu` | `~/.cache/starship/init.nu` | Yes |
+| Zoxide | `zoxide init nushell` | `~/.zoxide.nu` | Yes |
+| Atuin | Source init | `~/.local/share/atuin/init.nu` | Yes |
+| Direnv | pre_prompt hook | N/A | Yes |
+| Mise | `mise activate nu` | `~/.cache/mise/init.nu` | No — stub created if absent |
+| Carapace | `carapace _carapace nushell` | `~/.cache/carapace/init.nu` | No — stub created if absent |
+
+> `env.nu` automatically generates empty stubs for Mise and Carapace when the tools are not installed, so `config.nu` sources always succeed.
 
 **Aliases (similar to zsh):**
 - Git aliases: `gc`, `gca`, `gp`, `gst`, `glog`, etc.
 - K8s aliases: `k`, `ka`, `kg`, `kd`, etc.
-- General: `l`, `c`, `ll`, `lt`, `v`
+- General: `l`, `c`, `ll`, `lt`, `v`, `oc` (opencode), `asr` (atuin scripts run)
 
-**vs zsh:** Nushell provides structured data pipelines, type-safe environment variables, and native completions via Carapace bridge.
+**vs zsh:** Nushell provides structured data pipelines, type-safe environment variables, and native completions via Carapace bridge. Set as `default-shell` in tmux.
 
 ---
 
@@ -278,30 +286,47 @@ crust = "#11111b"
 
 **Prefix Key:** `Ctrl+a`
 
+**Settings:**
+| Option | Value | Notes |
+|--------|-------|-------|
+| `default-shell` | `~/.local/bin/nu` | Nushell in all new panes/windows |
+| `default-terminal` | `tmux-256color` | Correct for WezTerm true color |
+| `base-index` | `1` | Windows start at 1 |
+| `status-position` | `top` | Status bar at top |
+
 **Keybindings:**
 | Binding | Action |
 |---------|--------|
-| `s` | Split vertically |
-| `v` | Split horizontally |
-| `H/L` | Previous/next window |
+| `^C` | New window (home dir) |
+| `s` | Split pane vertically (current path) |
+| `v` | Split pane horizontally (current path) |
+| `\|` | Split pane horizontally (current path) |
 | `h/j/k/l` | Navigate panes |
-| `o` | tmux-sessionx (fuzzy session) |
-| `p` | tmux-floax (floating panes) |
+| `H/L` | Previous/next window |
 | `z` | Zoom/unzoom pane |
-| `K` | Clear scrollback |
-| `v` (copy mode) | Begin selection |
-| `y` (copy mode) | Yank to clipboard |
+| `c` | Kill pane |
+| `x` | Swap pane down |
+| `*` | Toggle synchronize panes |
+| `o` | tmux-sessionx (fuzzy session picker) |
+| `p` | tmux-floax (floating pane) |
+| `R` | Reload config |
+| `K` | Clear pane |
+| `^L` | Refresh client |
+| `v` (copy-mode-vi) | Begin selection |
+| `y` (copy-mode-vi) | Yank to clipboard (tmux-yank) |
 
 **Features:**
+- Nushell as default shell in all panes
 - Vi-style copy mode
 - 1M line scrollback
-- Session persistence via resurrect
-- Auto-restore via continuum
-- Catppuccin Mocha theme with window separators
+- Session persistence via resurrect + continuum auto-restore
+- Catppuccin Mocha theme (omerxx fork) with powerline separators
+- sessionx: zoxide-aware fuzzy session picker, custom path `~/.dotfiles`
+- floax: floating panes with magenta border
 
 **External Dependencies:**
-- `icalBuddy` (optional, for calendar script)
 - `fzf` (for sessionx, fzf-url, floax)
+- `icalBuddy` (optional, for `scripts/cal.sh` calendar integration)
 
 **Replaces:** screen, byobu
 
@@ -644,27 +669,28 @@ wezterm
     │               ├──► direnv
     │               ├──► fzf ───► fd
     │               ├──► eza
-    │               └──► bat
+    │               ├──► bat
+    │               └──► sesh ──► t() session picker
     │
     ├── nushell ────┬──► starship
-    │               ├──► zoxide
-    │               ├──► carapace
-    │               └──► atuin
+    │  (tmux shell) ├──► zoxide
+    │               ├──► atuin
+    │               ├──► direnv (pre_prompt hook)
+    │               ├──► carapace (optional, stub if absent)
+    │               ├──► mise (optional, stub if absent)
+    │               └──► wt.nu (WezTerm TERM_PROGRAM integration)
     │
-    └── (tmux OR zellij) ───► starship (via shell)
+    └── (tmux OR zellij) ───► nushell (default-shell)
               │
               ├──► tmux plugins: fzf, tmux-sessionx, tmux-floax
               └──► zellij plugins: tab-bar, status-bar
 
-nvim ───► starship (for status integration)
-    │
-    ├──► opencode.nvim (AI assistant)
+nvim ───► opencode.nvim (AI assistant)
     ├──► conform.nvim (formatter)
     ├──► nvim-dap (debugging)
     └──► Mason (LSP installers)
 
 gh-dash ───► gh (GitHub CLI)
-    │
     └──► tmux (window spawning)
 
 television ──┬──► fd
@@ -682,13 +708,16 @@ television ──┬──► fd
 | Tool/Category | This Config Uses | Replaces |
 |--------------|------------------|----------|
 | Terminal Emulator | Wezterm | xterm, gnome-terminal, kitty, alacritty |
-| Shell | zsh (primary), nushell (secondary) | bash, dash |
+| Shell (tmux) | nushell 0.112.2 | bash, zsh inside tmux |
+| Shell (terminal) | zsh | bash, dash |
 | Prompt | Starship | powerlevel10k, pure, starship-default |
 | Multiplexer | tmux + zellij (choose one) | screen, byobu |
+| Session Picker | sesh + `t()` | tmux choose-session, tmux-sessionx |
 | Editor | Neovim | vim, VSCode |
 | File Picker | FZF + Television | fzf (standalone), rofi |
 | History | Atuin | shell built-in history |
 | Git UI | Neovim + gh-dash | git CLI, GitHub web |
+| AI Assistant | opencode (`~/.opencode/bin`) | Copilot, Cursor |
 | Kubernetes | kubectl + aliases | kubeconfig manual editing |
 | Directory Jump | Zoxide | cd chains, autojump |
 
@@ -700,6 +729,7 @@ television ──┬──► fd
 
 | Tool | Package | Purpose |
 |------|---------|---------|
+| Nushell | `~/.local/bin/nu` v0.112.2 | Default shell in tmux |
 | Neovim | nvim | Editor |
 | Starship | starship | Prompt |
 | FZF | fzf | Fuzzy finder |
@@ -707,22 +737,24 @@ television ──┬──► fd
 | bat | bat | Cat replacement |
 | fd | fd | Fast file finder |
 | zoxide | zoxide | Directory jump |
+| atuin | atuin | Shell history |
 | direnv | direnv | Env hooks |
-| kubectl | kubernetes-client | K8s CLI |
+| sesh | `~/.local/bin/sesh` v2.25.0 | Tmux session picker (zsh `t()`) |
 | gh | github-cli | GitHub CLI |
 
 ### Optional Tools
 
 | Tool | Used By | Purpose |
 |------|---------|---------|
+| kubectl | zsh + nushell aliases | Kubernetes CLI |
 | icalBuddy | tmux/cal.sh | Calendar integration |
 | lazygit | gh-dash | Git TUI |
+| mise | nushell env.nu | Version manager (stub if absent) |
+| carapace | nushell env.nu | Completions bridge (stub if absent) |
 | ngrok | zsh aliases | Tunneling |
 | nmap | zsh aliases | Network scanning |
 | gobuster | zsh aliases | Web busting |
 | ffuf | zsh aliases | Fuzzing |
-| mise | nushell | Version manager |
-| carapace | nushell | Completions |
 
 ### Language Servers (auto-installed via Mason)
 
@@ -792,21 +824,28 @@ cx <dir>   # cd + l
 fcd        # fuzzy cd
 fv         # fuzzy open in nvim
 
+# Tmux sessions
+t          # fuzzy session picker via sesh (fzf popup)
+t <name>   # attach or create session by name
+
 # Git
 gc "msg"   # git commit -m
 gst        # git status
 glog       # colored log graph
 gdiff      # git diff
+gp         # git push origin HEAD
 
 # Kubernetes
 ka <file>  # kubectl apply -f
 kg         # kubectl get
 kd         # kubectl describe
 kl         # kubectl logs -f
+ke         # kubectl exec -it
 
 # General
 v          # nvim
 cat        # bat
-nm         # nmap scan
+oc         # opencode
 http       # xh (HTTP client)
+nm         # nmap scan
 ```
