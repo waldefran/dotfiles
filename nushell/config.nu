@@ -939,16 +939,12 @@ alias kl = kubectl logs -f
 alias ke = kubectl exec -it
 
 source ~/.zoxide.nu
-source ~/.local/share/atuin/init.nu
 use ~/.cache/starship/init.nu
 
-if (("~/.cache/carapace/init.nu" | path expand | path exists)) {
-    source ~/.cache/carapace/init.nu
-}
+source ~/.local/share/atuin/init.nu
 
-if (("~/.cache/mise/init.nu" | path expand | path exists)) {
-    use ~/.cache/mise/init.nu
-}
+source ~/.cache/carapace/init.nu
+use ~/.cache/mise/init.nu
 
 
 $env.DIRENV_LOG_FORMAT = ""
