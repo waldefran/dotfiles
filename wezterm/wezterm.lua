@@ -39,6 +39,7 @@ return {
   font = wezterm.font('JetBrains Mono Nerd Font'),
   window_background_opacity = 1.0,
   window_decorations = 'RESIZE',
+  default_prog = { '/home/valdemaster/.local/bin/nu' },
   keys = {
     {
       key = 'q',
