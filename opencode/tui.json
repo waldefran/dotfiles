@@ -32,7 +32,7 @@
     "messages_half_page_down": "ctrl+alt+d",
     "messages_first": "ctrl+g,home",
     "messages_last": "ctrl+alt+g,end",
-    "messages_next": "<leader>ctrl+n",
+    "messages_next": "<leader>N",
     "messages_previous": "<leader>p",
     "messages_copy": "<leader>y",
     "messages_undo": "<leader>u",
